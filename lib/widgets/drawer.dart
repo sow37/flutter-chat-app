@@ -110,7 +110,7 @@ class Drawers extends StatelessWidget {
                 prefs.remove('profile_photo');
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
-                    builder: (context) => RegistrationPage(),
+                    builder: (context) => RegistrationPage(prefs: prefs),
                   ),
                 );
                 // });

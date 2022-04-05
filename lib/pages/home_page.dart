@@ -9,16 +9,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:contact_picker/contact_picker.dart';
 
 import '../widgets/drawer.dart';
+import '../widgets/popup.dart';
 
 class HomePage extends StatefulWidget {
   final SharedPreferences prefs;
-  HomePage({this.prefs});
+  int currentIndex;
+
+  HomePage({this.prefs, this.currentIndex = 0});
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  int _currentIndex = 0;
   String _tabTitle = "Contacts";
   List<Widget> _children = [Container(), Container()];
 
@@ -27,6 +29,8 @@ class _HomePageState extends State<HomePage> {
   CollectionReference contactsReference;
   DocumentReference profileReference;
   DocumentSnapshot profileSnapshot;
+  CollectionReference groupsReference;
+  DocumentReference groupReference;
 
   final GlobalKey<FormState> _formStateKey = GlobalKey<FormState>();
   final _yourNameController = TextEditingController();
@@ -34,6 +38,10 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+
+    print('############### widget.currentIndex ${widget.currentIndex}');
+    onTabTapped(widget.currentIndex);
+
     contactsReference = db
         .collection("users")
         .doc(widget.prefs.getString('mobile'))
@@ -53,9 +61,9 @@ class _HomePageState extends State<HomePage> {
         _yourNameController.text = profileSnapshot.get("name");
       });
     });
-    // profileReference
-    //     .get()
-    //     .then((value) => print("########### mobile ${value.get('mobile')}"));
+
+    // Groups
+    groupsReference = db.collection("groups");
   }
 
   generateContactTab() {
@@ -79,12 +87,12 @@ class _HomePageState extends State<HomePage> {
                 return Expanded(
                   child: Center(
                       child: new Text(
-                    "No Contacts",
+                    "No group",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w300),
                   )),
                 );
               } else {
-                print("############ has contacts docs: ${snapshot.data.size}");
+                print("############ has group docs: ${snapshot.data.size}");
                 return Expanded(
                   child: new ListView(
                     children: generateContactList(snapshot),
@@ -109,148 +117,84 @@ class _HomePageState extends State<HomePage> {
     profileReference.update({'profile_photo': fileUrl});
   }
 
-  generateProfileTab() {
+  generateGroupTab() {
     return Center(
-      child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            (profileSnapshot != null
-                ? (profileSnapshot.get('profile_photo') != null
-                    ? Stack(
-                        children: [
-                          Container(
-                            width: 190.0,
-                            height: 190.0,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
-                              shape: BoxShape.circle,
-                              image: DecorationImage(
-                                fit: BoxFit.fill,
-                                image: NetworkImage(
-                                    '${profileSnapshot.get('profile_photo')}'),
-                              ),
-                            ),
-                            child: profileSnapshot.get('profile_photo') != ""
-                                ? null
-                                : Icon(Icons.person,
-                                    color: Colors.grey, size: 180),
-                          ),
-                          Positioned(
-                              right: 10.0,
-                              bottom: 10.0,
-                              child: Container(
-                                width: 45,
-                                height: 45,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade100,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: IconButton(
-                                  icon: Icon(Icons.upload_outlined, size: 35),
-                                  onPressed: () {
-                                    getProfilePicture();
-                                  },
-                                ),
-                              ))
-                        ],
-                      )
-                    : Container())
-                : Container()),
-            SizedBox(
-              height: 20,
+            StreamBuilder<QuerySnapshot>(
+              stream: groupsReference.snapshots(),
+              builder: (BuildContext context,
+                  AsyncSnapshot<QuerySnapshot> snapshot) {
+                if (!snapshot.hasData) {
+                  return Expanded(
+                    child: Center(
+                        child: new Text(
+                      "Loading...",
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.w300),
+                    )),
+                  );
+                } else {
+                  if (snapshot.data.size == 0) {
+                    print("############ docs: ${snapshot.data.size}");
+                    return Expanded(
+                      child: Center(
+                          child: new Text(
+                        "No Contacts",
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.w300),
+                      )),
+                    );
+                  } else {
+                    print(
+                        "############ has contacts docs: ${snapshot.data.size}");
+                    return Expanded(
+                      child: new ListView(
+                        children: generateGroupList(snapshot),
+                      ),
+                    );
+                  }
+                }
+              },
             ),
-            (!editName && profileSnapshot != null
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: <Widget>[
-                      Text(
-                        '${profileSnapshot.get("name" ?? "default data")}',
-                        style: TextStyle(fontSize: 25),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.edit),
-                        onPressed: () {
-                          setState(() {
-                            editName = true;
-                          });
-                        },
-                      ),
-                    ],
-                  )
-                : Container()),
-            (editName
-                ? Form(
-                    key: _formStateKey,
-
-                    // autovalidate: true,
-                    child: Column(
-                      children: <Widget>[
-                        Padding(
-                          padding:
-                              EdgeInsets.only(left: 10, right: 10, bottom: 10),
-                          child: TextFormField(
-                            validator: (value) {
-                              if (value.isEmpty) {
-                                return 'Please Enter Name';
-                              }
-                              if (value.trim() == "")
-                                return "Only Space is Not Valid!!!";
-                              return null;
-                            },
-                            controller: _yourNameController,
-                            decoration: InputDecoration(
-                              focusedBorder: new UnderlineInputBorder(
-                                  borderSide: new BorderSide(
-                                      width: 2, style: BorderStyle.solid)),
-                              labelText: "Your Name",
-                              icon: Icon(
-                                Icons.verified_user,
-                              ),
-                              fillColor: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : Container()),
-            (editName
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      RaisedButton(
-                        child: Text(
-                          'UPDATE',
-                          style: TextStyle(
-                            color: Colors.white,
-                          ),
-                        ),
-                        onPressed: () {
-                          if (_formStateKey.currentState.validate()) {
-                            profileReference
-                                .update({'name': _yourNameController.text});
-                            setState(() {
-                              editName = false;
-                            });
-                          }
-                        },
-                        color: Colors.lightBlue,
-                      ),
-                      MaterialButton(
-                        elevation: 2.0,
-                        child: Text('CANCEL'),
-                        onPressed: () {
-                          setState(() {
-                            editName = false;
-                          });
-                        },
-                      )
-                    ],
-                  )
-                : Container())
-          ]),
+          ],
+        ),
+      ),
     );
+  }
+
+  generateGroupList(AsyncSnapshot<QuerySnapshot> snapshot) {
+    return snapshot.data.docs
+        .map<Widget>(
+          (doc) => Container(
+            height: 50,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(right: 8.0),
+                  child: new CircleAvatar(
+                      child: null, backgroundImage: new NetworkImage(
+                          // 'https://firebasestorage.googleapis.com/v0/b/flutter-chat-app-afb7b.appspot.com/o/group%2F%2B55PfegubksFnvKwNBDqs?alt=media&token=0809e34c-7464-4e4f-a33f-3a18a7bb26bd'
+                          doc['image'])),
+                ),
+                Expanded(child: Text(doc["name"] ?? "no name")),
+                Icon(Icons.chevron_right)
+              ],
+            ),
+          ),
+        )
+        .toList();
   }
 
   generateContactList(AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -372,23 +316,27 @@ class _HomePageState extends State<HomePage> {
             });
           } else {
             print('################ User Not Registered');
+            customPopup(context, "User Not Registered",
+                "User must signup to the app", Icons.error);
           }
         }).catchError((e) {});
       } else {
         print('Wrong Mobile Number');
+        customPopup(
+            context, "Wrong number", "Wrong mobile number", Icons.error);
       }
     }
   }
 
   void onTabTapped(int index) {
     setState(() {
-      _currentIndex = index;
-      switch (_currentIndex) {
+      widget.currentIndex = index;
+      switch (widget.currentIndex) {
         case 0:
           _tabTitle = "Contacts";
           break;
         case 1:
-          _tabTitle = "Profile";
+          _tabTitle = "Groups";
           break;
       }
     });
@@ -398,7 +346,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     _children = [
       generateContactTab(),
-      generateProfileTab(),
+      generateGroupTab(),
     ];
     return DefaultTabController(
       length: 2,
@@ -413,18 +361,18 @@ class _HomePageState extends State<HomePage> {
         appBar: AppBar(
           title: Text(_tabTitle),
         ),
-        body: _children[_currentIndex],
+        body: _children[widget.currentIndex],
         bottomNavigationBar: BottomNavigationBar(
           onTap: onTabTapped, // new
-          currentIndex: _currentIndex, // new
+          currentIndex: widget.currentIndex, // new
           items: [
             new BottomNavigationBarItem(
               icon: Icon(Icons.mail),
               label: 'Contacts',
             ),
             new BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profile',
+              icon: Icon(Icons.group),
+              label: 'Groups',
             )
           ],
         ),
