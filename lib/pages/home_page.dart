@@ -87,7 +87,7 @@ class _HomePageState extends State<HomePage> {
                 return Expanded(
                   child: Center(
                       child: new Text(
-                    "No group",
+                    "No contacts",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w300),
                   )),
                 );
@@ -143,7 +143,7 @@ class _HomePageState extends State<HomePage> {
                     return Expanded(
                       child: Center(
                           child: new Text(
-                        "No Contacts",
+                        "No Groups",
                         style: TextStyle(
                             fontSize: 20, fontWeight: FontWeight.w300),
                       )),

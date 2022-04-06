@@ -16,7 +16,7 @@ class RegistrationPage extends StatefulWidget {
 class _RegistrationPageState extends State<RegistrationPage> {
   String smsOTP;
   String verificationId;
-  String errorMessage = 'wrong number';
+  String errorMessage = '';
   FirebaseAuth _auth = FirebaseAuth.instance;
   final db = FirebaseFirestore.instance;
   final TextEditingController controller = TextEditingController();
@@ -69,6 +69,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
               height: 85,
               child: Column(children: [
                 TextField(
+                  keyboardType: TextInputType.numberWithOptions(
+                      signed: true, decimal: false),
                   onChanged: (value) {
                     this.smsOTP = value;
                   },
@@ -100,14 +102,14 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   signIn() async {
     try {
-      // final AuthCredential credential = PhoneAuthProvider.credential(
-      //   verificationId: verificationId,
-      //   smsCode: smsOTP,
-      // );
-      // final UserCredential user = await _auth.signInWithCredential(credential);
-      // final User currentUser = await _auth.currentUser;
-      // assert(user.user.uid == currentUser.uid);
-      // Navigator.of(context).pop();
+      final AuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: smsOTP,
+      );
+      final UserCredential user = await _auth.signInWithCredential(credential);
+      final User currentUser = await _auth.currentUser;
+      assert(user.user.uid == currentUser.uid);
+      Navigator.of(context).pop();
       DocumentReference userRef = db
           .collection("users")
           .doc(phoneNo.phoneNumber.replaceAll(new RegExp(r'[^\w\s]+'), ''));
@@ -249,8 +251,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     inputError = false;
                     isLoading = true;
                   });
-                  // verifyPhone();
-                  signIn();
+                  verifyPhone();
+                  //signIn();
                 } else {
                   setState(() {
                     inputError = true;
