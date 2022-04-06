@@ -3,9 +3,9 @@ Est une application mobile de discussion et de partage de fichier en temps reel.
 Realisé avec flutter (frontend) et Firebase (backend).
 
 # Service Firebase Utilisé
-##Firebase Authentication ( authentification des users avec PhoneAuthProvider)
-##Firebase firestore (base de donnees en ligne)
-##Firebase Storage (Stockage des fichier)
+Firebase Authentication ( authentification des users avec PhoneAuthProvider)
+Firebase firestore (base de donnees en ligne)
+Firebase Storage (Stockage des fichier)
 
 # Flutter library
   shared_preferences: ^0.5.3+1
