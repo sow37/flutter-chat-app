@@ -31,7 +31,7 @@ Firebase Storage (Stockage des fichier)
   libphonenumber_web: ^0.1.1
 
 # Execution du projets (cmd)
-git clone "path"
+git clone "https://github.com/sow37/flutter-chat-app.git"
 
 dart pub get
 
