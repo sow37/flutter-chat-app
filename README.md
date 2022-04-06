@@ -4,7 +4,9 @@ Realisé avec flutter (frontend) et Firebase (backend).
 
 # Service Firebase Utilisé
 Firebase Authentication ( authentification des users avec PhoneAuthProvider)
+
 Firebase firestore (base de donnees en ligne)
+
 Firebase Storage (Stockage des fichier)
 
 # Flutter library
